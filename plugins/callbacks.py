@@ -19,6 +19,7 @@ async def query_handler(bot: Client, query: CallbackQuery):
         ]]
         await query.message.edit_text(
             text=scripts.ABOUT_TXT.format(temp_utils.BOT_NAME),
+            disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(btn)
         )
     elif query.data == "home":
@@ -30,6 +31,7 @@ async def query_handler(bot: Client, query: CallbackQuery):
         ]]
         await query.message.edit_text(
             text=scripts.START_TXT.format(query.from_user.mention, temp_utils.USER_NAME, temp_utils.BOT_NAME),
+            disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(btn)
         )
     elif query.data == "source":
@@ -39,6 +41,7 @@ async def query_handler(bot: Client, query: CallbackQuery):
         ]]
         await query.message.edit_text(
             text=scripts.SOURCE_TXT,
+            disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(btn)
         )
     elif query.data == "cancel_forward":
