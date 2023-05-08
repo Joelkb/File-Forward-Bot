@@ -91,3 +91,11 @@ async def forward_cmd(bot, message):
             await active_msg.edit(f'Error: {e}')
         else:
             await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>")
+
+@Client.on_message(filters.command('logs') & filters.user(ADMINS))
+async def log_file(bot, message):
+    """Send log file"""
+    try:
+        await message.reply_document('Logs.txt')
+    except Exception as e:
+        await message.reply(str(e))
