@@ -33,11 +33,18 @@ async def forward_cmd(bot, message):
         cmd_name, source_chat_id, last_msg_id = cmd.split(" ")
     except:
         return await message.reply_text("<b>Give me the source chat ID and last message ID of that chat along with this command !\n\nFor Example:\n/forward -1001xxxxxx 93793</b>")
-
     try:
-        k = await bot.get_messages(int(source_chat_id), int(last_msg_id))
+        await bot.get_chat(chat_id=int(source_chat_id))
+    except ChannelInvalid:
+        return await message.reply('This may be a private channel / group. Make me an admin over there to index the files.')
+    except (UsernameInvalid, UsernameNotModified):
+        return await message.reply('Invalid Link specified.')
     except Exception as e:
         logger.exception(e)
+        return await message.reply(f'Errors - {e}')
+    try:
+        k = await bot.get_messages(int(source_chat_id), int(last_msg_id))
+    except:
         return await message.reply('Make Sure That Iam An Admin In The Channel, if channel is private')
     if k.empty:
         return await message.reply('This may be group and iam not a admin of the group.')
