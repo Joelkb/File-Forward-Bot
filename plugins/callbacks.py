@@ -2,6 +2,10 @@ from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMa
 from pyrogram import Client
 from script import scripts
 from utils import temp_utils
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 @Client.on_callback_query()
 async def query_handler(bot: Client, query: CallbackQuery):
