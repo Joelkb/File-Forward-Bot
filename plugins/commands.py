@@ -62,15 +62,15 @@ async def forward_cmd(bot, message):
                     break
                 left = int(last_msg_id)-int(forwarded)
                 current += 1
-                if current % 5 == 0:
+                if current % 20 == 0:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nSleeping for 5 seconds to avoid floodwait...</b>",
+                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(30)
                     await active_msg.edit(
                         text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nResuming file forward...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
@@ -81,15 +81,16 @@ async def forward_cmd(bot, message):
                 try:
                     await msg.copy(chat_id=int(TARGET_DB))
                     forwarded+=1
+                    await asyncio.sleep(1)
                 except FloodWait as e:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"Got FloodWait.\n\nWaiting for {e.delay} seconds.",
+                        text=f"Got FloodWait.\n\nWaiting for {e.value} seconds.",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
-                    await asyncio.sleep(e.delay)
+                    await asyncio.sleep(e.value)
                     await msg.copy(chat_id=int(TARGET_DB))
                     forwarded+=1
                     continue
