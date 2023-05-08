@@ -33,7 +33,7 @@ async def forward_cmd(bot, message):
     try:
         cmd_name, source_chat_id, last_msg_id = cmd.split(" ")
     except:
-        return await message.reply_text("<b>Give me the source chat ID and last message ID of that chat along with this command !\n\nFor Example:\n/forward -1001xxxxxx 93793</b>")
+        return await message.reply_text("<b>Give me the source chat ID and last message ID of that chat along with this command !\n\nFor Example if channel is private:\n/forward -1001xxxxxx 93793\n(Note that the bot should be admin in the channel if private)\n\nFor Example if channel is public:\n/forward @username 63672\n(No need the bot to be admin in channel if public)</b>")
 
     btn = [[
         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
