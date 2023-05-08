@@ -107,3 +107,17 @@ async def log_file(bot, message):
         await message.reply_document('Logs.txt')
     except Exception as e:
         await message.reply(str(e))
+
+
+@Client.on_message(filters.command('setskip') & filters.user(ADMINS))
+async def skip_msgs(bot, message):
+    if ' ' in message.text:
+        _, skip = message.text.split(" ")
+        try:
+            skip = int(skip)
+        except:
+            return await message.reply("Skip number should be an integer.")
+        await message.reply(f"Successfully set SKIP number as {skip}")
+        temp_utils.CURRENT = int(skip)
+    else:
+        await message.reply("Give me a skip number")
