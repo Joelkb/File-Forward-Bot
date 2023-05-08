@@ -48,7 +48,7 @@ async def forward_cmd(bot, message):
         try:
             current = temp_utils.CURRENT
             temp_utils.CANCEL = False
-            async for msg in bot.iter_messages(source_chat_id, last_msg_id, temp_utils.CURRENT):
+            async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
                 if temp_utils.CANCEL:
                     await active_msg.edit(f"<b>Successfully Cancelled!\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>")
                     break
