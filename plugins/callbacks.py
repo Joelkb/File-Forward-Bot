@@ -10,7 +10,6 @@ logger.setLevel(logging.ERROR)
 @Client.on_callback_query()
 async def query_handler(bot: Client, query: CallbackQuery):
     if query.data == "close":
-        await query.message.reply_to_message.delete()
         await query.message.delete()
     elif query.data == "about":
         btn = [[
