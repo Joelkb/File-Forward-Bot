@@ -21,6 +21,7 @@ async def start_message(bot, message):
     ]]
     await message.reply_text(
         text=scripts.START_TXT.format(message.from_user.mention, temp_utils.USER_NAME, temp_utils.BOT_NAME),
+        disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(btn)
     )
 
@@ -46,6 +47,13 @@ async def forward_cmd(bot, message):
     left = 0
     async with lock:
         try:
+            btn = [[
+                InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+            ]]
+            await active_msg.edit(
+                text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>",
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
             current = temp_utils.CURRENT
             temp_utils.CANCEL = False
             async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
@@ -54,12 +62,17 @@ async def forward_cmd(bot, message):
                     break
                 left = int(last_msg_id)-int(forwarded)
                 current += 1
-                if current % 20 == 0:
+                if current % 5 == 0:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>",
+                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nSleeping for 5 seconds to avoid floodwait...</b>",
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                    await asyncio.sleep(5)
+                    await active_msg.edit(
+                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nResuming file forward...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                 if message.empty:
@@ -69,7 +82,14 @@ async def forward_cmd(bot, message):
                     await msg.copy(chat_id=int(TARGET_DB))
                     forwarded+=1
                 except FloodWait as e:
-                    await asyncio.sleep(e.x)
+                    btn = [[
+                        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+                    ]]
+                    await active_msg.edit(
+                        text=f"Got FloodWait.\n\nWaiting for {e.delay} seconds.",
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                    await asyncio.sleep(e.delay)
                     await msg.copy(chat_id=int(TARGET_DB))
                     forwarded+=1
                     continue
