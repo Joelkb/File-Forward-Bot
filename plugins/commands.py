@@ -1,11 +1,12 @@
 from utils import temp_utils
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, UsernameInvalid, UsernameNotModified
 from pyrogram.errors import FloodWait
 from script import scripts
 from vars import ADMINS, TARGET_DB
 import asyncio
+import re
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,80 +26,49 @@ async def start_message(bot, message):
         reply_markup=InlineKeyboardMarkup(btn)
     )
 
-@Client.on_message(filters.command("forward") & filters.user(ADMINS))
+@Client.on_message((filters.forwarded | (filters.regex("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")) & filters.text ) & filters.private & filters.incoming)
 async def forward_cmd(bot, message):
-    cmd = message.text
+    if message.from_user.id not in ADMINS: return # admin only
+    if message.text:
+        regex = re.compile("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")
+        match = regex.match(message.text)
+        if not match:
+            return await message.reply('Invalid link')
+        source_chat_id = match.group(4)
+        last_msg_id = int(match.group(5))
+        if source_chat_id.isnumeric():
+            source_chat_id  = int(("-100" + source_chat_id))
+    elif message.forward_from_chat.type == enums.ChatType.CHANNEL:
+        last_msg_id = message.forward_from_message_id
+        source_chat_id = message.forward_from_chat.username or message.forward_from_chat.id
+    else:
+        return
+    try:
+        await bot.get_chat(source_chat_id)
+    except ChannelInvalid:
+        return await message.reply('This may be a private channel / group. Make me an admin over there to index the files.')
+    except (UsernameInvalid, UsernameNotModified):
+        return await message.reply('Invalid Link specified.')
+    except Exception as e:
+        logger.exception(e)
+        return await message.reply(f'Errors - {e}')
+    try:
+        k = await bot.get_messages(source_chat_id, last_msg_id)
+    except:
+        return await message.reply('Make Sure That Iam An Admin In The Channel, if channel is private')
+    if k.empty:
+        return await message.reply('This may be group and iam not a admin of the group.')
     if lock.locked():
         return await message.reply_text('<b>Wait until previous process complete.</b>')
-    try:
-        cmd_name, source_chat_id, last_msg_id = cmd.split(" ")
-    except:
-        return await message.reply_text("<b>Give me the source chat ID and last message ID of that chat along with this command !\n\nFor Example if channel is private:\n/forward -1001xxxxxx 93793\n(Note that the bot should be admin in the channel if private)\n\nFor Example if channel is public:\n/forward @username 63672\n(No need the bot to be admin in channel if public)</b>")
-
-    btn = [[
-        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+    button = [[
+        InlineKeyboardButton("YES", callback_data=f"forward#{source_chat_id}#{last_msg_id}"),
+        InlineKeyboardButton("NO", callback_data="close")
     ]]
-    active_msg = await message.reply_text(
-        text="<b>Starting Forward Process...</b>",
-        reply_markup = InlineKeyboardMarkup(btn)
+    await message.reply_text(
+        text="Do you want to start forwarding ?",
+        reply_markup=InlineKeyboardMarkup(button)
     )
-    forwarded = 0
-    empty = 0
-    left = 0
-    async with lock:
-        try:
-            btn = [[
-                InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
-            ]]
-            await active_msg.edit(
-                text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>",
-                reply_markup=InlineKeyboardMarkup(btn)
-            )
-            current = temp_utils.CURRENT
-            temp_utils.CANCEL = False
-            async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
-                if temp_utils.CANCEL:
-                    await active_msg.edit(f"<b>Successfully Cancelled!\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>")
-                    break
-                left = int(last_msg_id)-int(forwarded)
-                current += 1
-                if current % 20 == 0:
-                    btn = [[
-                        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
-                    ]]
-                    await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
-                        reply_markup=InlineKeyboardMarkup(btn)
-                    )
-                    await asyncio.sleep(30)
-                    await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}\n\nResuming file forward...</b>",
-                        reply_markup=InlineKeyboardMarkup(btn)
-                    )
-                if message.empty:
-                    empty+=1
-                    continue
-                try:
-                    await msg.copy(chat_id=int(TARGET_DB))
-                    forwarded+=1
-                    await asyncio.sleep(1)
-                except FloodWait as e:
-                    btn = [[
-                        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
-                    ]]
-                    await active_msg.edit(
-                        text=f"Got FloodWait.\n\nWaiting for {e.value} seconds.",
-                        reply_markup=InlineKeyboardMarkup(btn)
-                    )
-                    await asyncio.sleep(e.value)
-                    await msg.copy(chat_id=int(TARGET_DB))
-                    forwarded+=1
-                    continue
-        except Exception as e:
-            logger.exception(e)
-            await active_msg.edit(f'Error: {e}')
-        else:
-            await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nMessages Left: {left}</b>")
+
 
 @Client.on_message(filters.command('logs') & filters.user(ADMINS))
 async def log_file(bot, message):
@@ -121,3 +91,79 @@ async def skip_msgs(bot, message):
         temp_utils.CURRENT = int(skip)
     else:
         await message.reply("Give me a skip number")
+
+
+async def start_forward(bot, userid, source_chat_id, last_msg_id):
+    btn = [[
+        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+    ]]
+    active_msg = await bot.send_message(
+        chat_id=int(userid),
+        text="<b>Starting Forward Process...</b>",
+        reply_markup = InlineKeyboardMarkup(btn)
+    )
+    forwarded = 0
+    empty = 0
+    notmedia = 0
+    unsupported = 0
+    left = 0
+    async with lock:
+        try:
+            btn = [[
+                InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+            ]]
+            await active_msg.edit(
+                text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>",
+                reply_markup=InlineKeyboardMarkup(btn)
+            )
+            current = temp_utils.CURRENT
+            temp_utils.CANCEL = False
+            async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
+                if temp_utils.CANCEL:
+                    await active_msg.edit(f"<b>Successfully Cancelled!\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
+                    break
+                left = int(last_msg_id)-int(forwarded)
+                current += 1
+                if current % 20 == 0:
+                    btn = [[
+                        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+                    ]]
+                    await active_msg.edit(
+                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                    await asyncio.sleep(30)
+                    await active_msg.edit(
+                        text=f"<b>Forwarding on progress...\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nResuming file forward...</b>",
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                if msg.empty:
+                    empty+=1
+                    continue
+                elif not msg.media:
+                    no_media += 1
+                    continue
+                elif msg.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
+                    unsupported += 1
+                    continue
+                try:
+                    await msg.copy(chat_id=int(TARGET_DB))
+                    forwarded+=1
+                    await asyncio.sleep(1)
+                except FloodWait as e:
+                    btn = [[
+                        InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
+                    ]]
+                    await active_msg.edit(
+                        text=f"Got FloodWait.\n\nWaiting for {e.value} seconds.",
+                        reply_markup=InlineKeyboardMarkup(btn)
+                    )
+                    await asyncio.sleep(e.value)
+                    await msg.copy(chat_id=int(TARGET_DB))
+                    forwarded+=1
+                    continue
+        except Exception as e:
+            logger.exception(e)
+            await active_msg.edit(f'Error: {e}')
+        else:
+            await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")

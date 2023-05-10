@@ -24,3 +24,11 @@ Mʏ Nᴀᴍᴇ Is <a href=https://t.me/{}>{}</a>, I'm Just A Private Forward Bot
 - ꜱᴏᴜʀᴄᴇ - <a href="https://github.com/Joelkb/File-Forward-Bot">ʜᴇʀᴇ</a>
 Dᴇᴠᴇʟᴏᴘᴇʀ:
 - <a href="https://t.me/creatorbeatz">Jᴏᴇʟ ᠰ TɢX</a></b>"""
+
+    HELP_TXT = """
+<b>Here are all my commands:
+/start - To check if I'm alive or not
+/logs - To check my logs [Admin Only]
+/setskip - To skip a number of messages [Admin Only]
+
+This bot might be available to all in the future.</b>"""
