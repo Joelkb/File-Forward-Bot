@@ -121,13 +121,13 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                 reply_markup=InlineKeyboardMarkup(btn)
             )
             current = temp_utils.CURRENT
-            total = current
             temp_utils.CANCEL = False
             async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
                 if temp_utils.CANCEL:
                     await active_msg.edit(f"<b>Successfully Cancelled!\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
                     break
                 left = int(last_msg_id)-int(total)
+                total = current
                 current += 1
                 if current % 20 == 0:
                     btn = [[
