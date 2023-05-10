@@ -59,4 +59,5 @@ async def query_handler(bot: Client, query: CallbackQuery):
         )
     elif query.data.startswith("forward"):
         ident, source_chat_id, last_msg_id = query.data.split("#")
+        await query.message.delete()
         await start_forward(bot, query.from_user.id, source_chat_id, last_msg_id)
