@@ -104,8 +104,8 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
         text="<b>Starting Forward Process...</b>",
         reply_markup = InlineKeyboardMarkup(btn)
     )
-    skipped = 0
-    Total = skipped
+    skipped = int(temp_utils.CURRENT)
+    total = 0
     forwarded = 0
     empty = 0
     notmedia = 0
@@ -117,28 +117,29 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                 InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
             ]]
             await active_msg.edit(
-                text=f"<b>Forwarding on progress...\n\nTotal: {Total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>",
+                text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>",
                 reply_markup=InlineKeyboardMarkup(btn)
             )
             current = temp_utils.CURRENT
+            total = current
             temp_utils.CANCEL = False
             async for msg in bot.iter_messages(source_chat_id, int(last_msg_id), int(temp_utils.CURRENT)):
                 if temp_utils.CANCEL:
-                    await active_msg.edit(f"<b>Successfully Cancelled!\n\nTotal: {Total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
+                    await active_msg.edit(f"<b>Successfully Cancelled!\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
                     break
-                left = int(last_msg_id)-int(forwarded)
+                left = int(last_msg_id)-int(total)
                 current += 1
                 if current % 20 == 0:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nTotal: {Total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
+                        text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                     await asyncio.sleep(30)
                     await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nTotal: {Total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nResuming file forward...</b>",
+                        text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nResuming file forward...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                 if msg.empty:
@@ -170,4 +171,4 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
             logger.exception(e)
             await active_msg.edit(f'Error: {e}')
         else:
-            await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nTotal: {Total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
+            await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
