@@ -3,7 +3,7 @@ from pyrogram import Client
 from script import scripts
 from utils import temp_utils
 import logging
-from commands import start_forward
+from .commands import start_forward
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
