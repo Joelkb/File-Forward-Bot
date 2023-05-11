@@ -22,7 +22,10 @@ async def start_message(bot, message):
             InlineKeyboardButton("Close", callback_data="close"),
             InlineKeyboardButton("Help", callback_data="help")
         ]]
-    is_exist = await is_user_exist(message.from_user.id)
+    try:
+        is_exist = await is_user_exist(message.from_user.id)
+    except Exception as e:
+        logger.exception(e)
     if not is_exist:
         await add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     await message.reply_text(
@@ -34,13 +37,16 @@ async def start_message(bot, message):
 @Client.on_message(filters.command('set_target') & filters.user(ADMINS))
 async def set_target_chat(bot, message):
     if ' ' in message.text:
-        _, chatid = message.text.split(" ")
         try:
-            chatid = int(chatid)
-        except:
-            return await message.reply("Chat ID number should be an integer.")
-        await update_target(message.from_user.id, chatid)
-        await message.reply(f"Successfully set target channel ID as {chatid}")
+            _, chatid = message.text.split(" ")
+            try:
+                chatid = int(chatid)
+            except:
+                return await message.reply("Chat ID number should be an integer.")
+            await update_target(message.from_user.id, chatid)
+            await message.reply(f"Successfully set target channel ID as {chatid}")
+        except Exception as e:
+            logger.exception(e)
     else:
         await message.reply("Give me a chat ID")
 
@@ -50,7 +56,8 @@ async def set_file_caption(bot, message):
         _, caption = message.text.split(" ", 1)[1]
         await update_caption(message.from_user.id, caption)
         await message.reply(f"Successfully set caption as {caption}")
-    except:
+    except Exception as e:
+        logger.exception(e)
         await message.reply("Give me a caption")
 
 
