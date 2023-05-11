@@ -38,8 +38,8 @@ def unban_user(userid):
 async def get_all_users():
     return collection.find({})
 
-async def get_user(userid):
-    user = await collection.find_one({'id': int(userid)})
+def get_user(userid):
+    user = collection.find_one({'id': int(userid)})
     return user
     
 def update_stats(userid, msgid, last_msg_id, sourcechat, target, on_process):
