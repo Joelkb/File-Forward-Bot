@@ -1,0 +1,57 @@
+{
+    "name": "File-Forward-Bot",
+    "description": "Use this bot to forward all files from one channel to other even if its private or public.",
+    "stack": "container",
+    "keywords": [
+      "telegram",
+      "auto-forward-bot",
+      "forward-bot",
+      "forward",
+      "best",
+      "indian",
+      "pyrogram",
+      "media",
+      "export",
+      "channel",
+      "file-forward",
+      "media-forward"
+    ],
+    "website": "https://github.com/Joelkb/File-Forward-Bot",
+    "repository": "https://github.com/Joelkb/File-Forward-Bot",
+    "env": {
+        "BOT_TOKEN": {
+            "description": "Your bot token.",
+            "required": true
+        },
+        "API_ID": {
+            "description": "Get this value from https://my.telegram.org",
+            "required": true
+        },
+        "API_HASH": {
+            "description": "Get this value from https://my.telegram.org",
+            "required": true
+        },
+        "TARGET_DB": {
+            "description": "ID of channel which you want the bot to send all files to.",
+            "required": true
+        },
+        "ADMINS": {
+            "description": "ID of Admin. Separate multiple Admins by space.",
+            "required": true
+        },
+        "LOG_CHANNEL": {
+            "description": "Bot Logs,Give a channel id with -100xxxxxxx",
+            "required": true
+        }
+    },
+    "addons": [],
+    "buildpacks": [{
+        "url": "heroku/python"
+    }],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "eco"
+        }
+    }
+}

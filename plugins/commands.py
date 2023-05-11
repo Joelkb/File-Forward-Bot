@@ -178,7 +178,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                     empty+=1
                     continue
                 elif not msg.media:
-                    no_media += 1
+                    notmedia += 1
                     continue
                 elif msg.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
                     unsupported += 1
