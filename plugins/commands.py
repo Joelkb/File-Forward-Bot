@@ -3,6 +3,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, UsernameInvalid, UsernameNotModified
 from pyrogram.errors import FloodWait
+from database.data_base import is_user_exist, add_user, update_stats, get_user, update_target, update_caption
 from script import scripts
 from vars import ADMINS, TARGET_DB
 import asyncio
@@ -21,15 +22,44 @@ async def start_message(bot, message):
             InlineKeyboardButton("Close", callback_data="close"),
             InlineKeyboardButton("Help", callback_data="help")
         ]]
+    is_exist = await is_user_exist(message.from_user.id)
+    if not is_exist:
+        await add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     await message.reply_text(
         text=scripts.START_TXT.format(message.from_user.mention, temp_utils.USER_NAME, temp_utils.BOT_NAME),
         disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(btn)
     )
 
+@Client.on_message(filters.command('set_target') & filters.user(ADMINS))
+async def set_target_chat(bot, message):
+    if ' ' in message.text:
+        _, chatid = message.text.split(" ")
+        try:
+            chatid = int(chatid)
+        except:
+            return await message.reply("Chat ID number should be an integer.")
+        await update_target(message.from_user.id, chatid)
+        await message.reply(f"Successfully set target channel ID as {chatid}")
+    else:
+        await message.reply("Give me a chat ID")
+
+@Client.on_message(filters.command('set_caption') & filters.user(ADMINS))
+async def set_file_caption(bot, message):
+    try:
+        _, caption = message.text.split(" ", 1)[1]
+        await update_caption(message.from_user.id, caption)
+        await message.reply(f"Successfully set caption as {caption}")
+    except:
+        await message.reply("Give me a caption")
+
+
 @Client.on_message((filters.forwarded | (filters.regex("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")) & filters.text ) & filters.private & filters.incoming)
 async def forward_cmd(bot, message):
     if message.from_user.id not in ADMINS: return # admin only
+    user = await is_user_exist(message.from_user.id)
+    if not user:
+        await add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     if message.text:
         regex = re.compile("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")
         match = regex.match(message.text)
@@ -96,6 +126,7 @@ async def skip_msgs(bot, message):
 
 
 async def start_forward(bot, userid, source_chat_id, last_msg_id):
+    user_info = await get_user(userid=userid)
     btn = [[
         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
     ]]
@@ -133,6 +164,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
+                    await update_stats(userid=userid, msgid=current, last_msg_id=last_msg_id, sourcechat=source_chat_id, target=user_info['target'])
                     await active_msg.edit(
                         text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
@@ -151,8 +183,16 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                 elif msg.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
                     unsupported += 1
                     continue
+                caption = (user_info['caption']).format(
+                    file_name='' if msg.file_name is None else msg.file_name,
+                    file_size='' if msg.file_size is None else msg.file_size,
+                    file_caption='' if msg.caption is None else msg.caption
+                )
                 try:
-                    await msg.copy(chat_id=int(TARGET_DB))
+                    await msg.copy(
+                        chat_id=int(user_info['target']),
+                        caption=caption
+                    )
                     forwarded+=1
                     await asyncio.sleep(1)
                 except FloodWait as e:
@@ -164,7 +204,10 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                     await asyncio.sleep(e.value)
-                    await msg.copy(chat_id=int(TARGET_DB))
+                    await msg.copy(
+                        chat_id=int(user_info['target']),
+                        caption=caption
+                    )
                     forwarded+=1
                     continue
         except Exception as e:
