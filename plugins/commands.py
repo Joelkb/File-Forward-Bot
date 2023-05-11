@@ -137,7 +137,7 @@ async def skip_msgs(bot, message):
 
 async def start_forward(bot, userid, source_chat_id, last_msg_id):
     try:
-        user_info = await get_user(userid=userid)
+        user_info = await get_user(userid=int(userid))
     except Exception as e:
         logger.exception(e)
     btn = [[
