@@ -23,7 +23,7 @@ async def start_message(bot, message):
             InlineKeyboardButton("Help", callback_data="help")
         ]]
     try:
-        is_exist = await is_user_exist(message.from_user.id)
+        is_exist = is_user_exist(message.from_user.id)
     except Exception as e:
         logger.exception(e)
     if not is_exist:
@@ -43,7 +43,7 @@ async def set_target_chat(bot, message):
                 chatid = int(chatid)
             except:
                 return await message.reply("Chat ID number should be an integer.")
-            await update_target(message.from_user.id, chatid)
+            update_target(message.from_user.id, chatid)
             await message.reply(f"Successfully set target channel ID as {chatid}")
         except Exception as e:
             logger.exception(e)
@@ -54,7 +54,7 @@ async def set_target_chat(bot, message):
 async def set_file_caption(bot, message):
     try:
         caption = message.text.split(" ", 1)[1]
-        await update_caption(message.from_user.id, caption)
+        update_caption(message.from_user.id, caption)
         await message.reply(f"Successfully set caption as {caption}")
     except Exception as e:
         logger.exception(e)
@@ -65,7 +65,7 @@ async def set_file_caption(bot, message):
 async def forward_cmd(bot, message):
     if message.from_user.id not in ADMINS: return # admin only
     try:
-        user = await is_user_exist(message.from_user.id)
+        user = is_user_exist(message.from_user.id)
     except Exception as e:
         logger.exception(e)
     if not user:
@@ -174,7 +174,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
-                    await update_stats(userid=userid, msgid=current, last_msg_id=last_msg_id, sourcechat=source_chat_id, target=user_info['target'])
+                    update_stats(userid=userid, msgid=current, last_msg_id=last_msg_id, sourcechat=source_chat_id, target=user_info['target'], on_process=True)
                     await active_msg.edit(
                         text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
@@ -224,4 +224,5 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
             logger.exception(e)
             await active_msg.edit(f'Error: {e}')
         else:
+            update_stats(userid=userid, msgid=current, last_msg_id=last_msg_id, sourcechat=source_chat_id, target=user_info['target'], on_process=False)
             await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")

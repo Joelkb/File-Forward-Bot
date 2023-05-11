@@ -21,19 +21,19 @@ async def add_user(userid, username, name):
     }
     await collection.insert_one(user_details)
 
-async def is_user_exist(userid):
-    user = await collection.find_one({'id': userid})
+def is_user_exist(userid):
+    user = collection.find_one({'id': userid})
     return bool(user)
     
 async def count_users():
     total = await collection.count_documents({})
     return total
 
-async def ban_user(userid, reason):
-    await collection.update_one({'id': userid}, {'$set': {'is_banned': True, 'ban_reason': reason}})
+def ban_user(userid, reason):
+    collection.update_one({'id': userid}, {'$set': {'is_banned': True, 'ban_reason': reason}})
 
-async def unban_user(userid):
-    await collection.update_one({'id': userid}, {'$set': {'is_banned': False, 'ban_reason': None}})
+def unban_user(userid):
+    collection.update_one({'id': userid}, {'$set': {'is_banned': False, 'ban_reason': None}})
 
 async def get_all_users():
     return collection.find({})
@@ -43,21 +43,21 @@ async def get_user(userid):
     if user:
         return user
     
-async def update_stats(userid, msgid, last_msg_id, sourcechat, target):
-    await collection.update_one(
+def update_stats(userid, msgid, last_msg_id, sourcechat, target, on_process):
+    collection.update_one(
         {'id': userid},
-        {'$set': {'target': target, 'source': sourcechat, 'skip': msgid, 'last_msg_id': last_msg_id, 'on_process': True}},
+        {'$set': {'target': target, 'source': sourcechat, 'skip': msgid, 'last_msg_id': last_msg_id, 'on_process': on_process}},
         upsert=True
     )
 
-async def update_target(userid, target):
-    await collection.update_one(
+def update_target(userid, target):
+    collection.update_one(
         {'id': userid},
         {'$set': {'target': target}}
     )
 
-async def update_caption(userid, caption):
-    await collection.update_one(
+def update_caption(userid, caption):
+    collection.update_one(
         {'id': userid},
         {'$set': {'caption': caption}}
     )
