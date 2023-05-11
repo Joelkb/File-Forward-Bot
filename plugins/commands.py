@@ -136,7 +136,10 @@ async def skip_msgs(bot, message):
 
 
 async def start_forward(bot, userid, source_chat_id, last_msg_id):
-    user_info = await get_user(userid=userid)
+    try:
+        user_info = await get_user(userid=userid)
+    except Exception as e:
+        logger.exception(e)
     btn = [[
         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
     ]]
