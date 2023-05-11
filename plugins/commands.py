@@ -64,7 +64,10 @@ async def set_file_caption(bot, message):
 @Client.on_message((filters.forwarded | (filters.regex("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")) & filters.text ) & filters.private & filters.incoming)
 async def forward_cmd(bot, message):
     if message.from_user.id not in ADMINS: return # admin only
-    user = await is_user_exist(message.from_user.id)
+    try:
+        user = await is_user_exist(message.from_user.id)
+    except Exception as e:
+        logger.exception(e)
     if not user:
         await add_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     if message.text:

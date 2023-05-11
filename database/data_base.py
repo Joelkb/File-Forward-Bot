@@ -21,12 +21,9 @@ async def add_user(userid, username, name):
     }
     await collection.insert_one(user_details)
 
-def is_user_exist(userid):
-    user = collection.find_one({'id': userid})
-    if user:
-        return True
-    else:
-        return False
+async def is_user_exist(userid):
+    user = await collection.find_one({'id': userid})
+    return bool(user)
     
 async def count_users():
     total = await collection.count_documents({})
@@ -39,7 +36,7 @@ async def unban_user(userid):
     await collection.update_one({'id': userid}, {'$set': {'is_banned': False, 'ban_reason': None}})
 
 async def get_all_users():
-    return await collection.find({})
+    return collection.find({})
 
 async def get_user(userid):
     user = await collection.find_one({'id': userid})
@@ -53,8 +50,8 @@ async def update_stats(userid, msgid, last_msg_id, sourcechat, target):
         upsert=True
     )
 
-def update_target(userid, target):
-    collection.update_one(
+async def update_target(userid, target):
+    await collection.update_one(
         {'id': userid},
         {'$set': {'target': target}}
     )
