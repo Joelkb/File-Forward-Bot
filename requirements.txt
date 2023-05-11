@@ -3,4 +3,3 @@ tgcrypto
 pytz
 aiohttp
 datetime
-pymongo
