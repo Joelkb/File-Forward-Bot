@@ -40,8 +40,7 @@ async def get_all_users():
 
 async def get_user(userid):
     user = await collection.find_one({'id': int(userid)})
-    if user:
-        return user
+    return user
     
 def update_stats(userid, msgid, last_msg_id, sourcechat, target, on_process):
     collection.update_one(

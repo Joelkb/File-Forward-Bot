@@ -140,6 +140,10 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
         user_info = await get_user(userid=int(userid))
     except Exception as e:
         logger.exception(e)
+    if user_info is None:
+        logger.exception("user_info is None")
+    else:
+        logger.exception(user_info)
     btn = [[
         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
     ]]
