@@ -38,7 +38,7 @@ async def start_message(bot, message):
 async def set_target_chat(bot, message):
     if ' ' in message.text:
         try:
-            _, chatid = message.text.split(" ")
+            chatid = message.text.split(" ", 1)[1]
             try:
                 chatid = int(chatid)
             except:
@@ -53,7 +53,7 @@ async def set_target_chat(bot, message):
 @Client.on_message(filters.command('set_caption') & filters.user(ADMINS))
 async def set_file_caption(bot, message):
     try:
-        _, caption = message.text.split(" ", 1)[1]
+        caption = message.text.split(" ", 1)[1]
         await update_caption(message.from_user.id, caption)
         await message.reply(f"Successfully set caption as {caption}")
     except Exception as e:

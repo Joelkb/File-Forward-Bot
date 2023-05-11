@@ -21,8 +21,8 @@ async def add_user(userid, username, name):
     }
     await collection.insert_one(user_details)
 
-async def is_user_exist(userid):
-    user = await collection.find_one({'id': userid})
+def is_user_exist(userid):
+    user = collection.find_one({'id': userid})
     if user:
         return True
     else:
@@ -53,8 +53,8 @@ async def update_stats(userid, msgid, last_msg_id, sourcechat, target):
         upsert=True
     )
 
-async def update_target(userid, target):
-    await collection.update_one(
+def update_target(userid, target):
+    collection.update_one(
         {'id': userid},
         {'$set': {'target': target}}
     )
