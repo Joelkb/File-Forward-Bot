@@ -157,13 +157,12 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                         chat_id=int(TARGET_DB)
                     )
                     forwarded+=1
-                    await asyncio.sleep(1)
                 except FloodWait as e:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"Got FloodWait.\n\nWaiting for {e.value} seconds.",
+                        text=f"<b>Got FloodWait.\n\nWaiting for {e.value} seconds.</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                     await asyncio.sleep(e.value)
@@ -174,6 +173,6 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                     continue
         except Exception as e:
             logger.exception(e)
-            await active_msg.edit(f'Error: {e}')
+            await active_msg.edit(f'<b>Error:</b> <code>{e}</code>')
         else:
             await active_msg.edit(f"<b>Successfully Completed Forward Process !\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>")
