@@ -135,12 +135,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
                     ]]
                     await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nSleeping for 30 seconds to avoid floodwait...</b>",
-                        reply_markup=InlineKeyboardMarkup(btn)
-                    )
-                    await asyncio.sleep(30)
-                    await active_msg.edit(
-                        text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}\n\nResuming file forward...</b>",
+                        text=f"<b>Forwarding on progress...\n\nTotal: {total}\nSkipped: {skipped}\nForwarded: {forwarded}\nEmpty Message: {empty}\nNot Media: {notmedia}\nUnsupported Media: {unsupported}\nMessages Left: {left}</b>",
                         reply_markup=InlineKeyboardMarkup(btn)
                     )
                 if msg.empty:
@@ -157,7 +152,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                         chat_id=int(TARGET_DB)
                     )
                     forwarded+=1
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(1)
                 except FloodWait as e:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
