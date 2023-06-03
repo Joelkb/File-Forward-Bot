@@ -157,6 +157,7 @@ async def start_forward(bot, userid, source_chat_id, last_msg_id):
                         chat_id=int(TARGET_DB)
                     )
                     forwarded+=1
+                    await asyncio.sleep(0.5)
                 except FloodWait as e:
                     btn = [[
                         InlineKeyboardButton("CANCEL", callback_data="cancel_forward")
